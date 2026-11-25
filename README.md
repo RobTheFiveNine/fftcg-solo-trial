@@ -76,3 +76,5 @@ A typical game lasts roughly 40 to 50 minutes and has different win conditions t
 ---
 
 *Solo Trial Mode Ruleset v1.1*
+
+*Solo Trial Mode is an unofficial, fan-made game mode. All Final Fantasy content and materials are trademarks and copyrights of Square Enix. Solo Trial Mode is not affiliated with, sponsored or endorsed by Square Enix.*
