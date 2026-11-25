@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FFTCG Solo Trial Mode</title>
+<style>
+  :root {
+    --paper: #f4efe4;
+    --paper-2: #ebe4d4;
+    --ink: #1f1b16;
+    --ink-soft: #4a433a;
+    --rule: #cfc5b0;
+    --player: #b8322a;
+    --player-tint: #f3dcd6;
+    --ai: #5b3a8c;
+    --ai-tint: #e4dcef;
+    --shared: #8a6a1c;
+    --shared-tint: #ece1c4;
+    --serif: Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+  }
+
+  .masthead {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 40px;
+    align-items: end;
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 32px;
+  }
+
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4.2rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+  }
+
+  .masthead .lede {
+    font-size: 1.1rem;
+    max-width: 36em;
+    margin: 0 0 14px;
+  }
+
+  .masthead .lede:last-of-type {
+    margin-bottom: 28px;
+  }
+
+  .masthead .hero-art {
+    align-self: end;
+  }
+
+  .masthead .hero-art img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .contents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    padding: 18px 0 0;
+    margin: 0 0 48px;
+    list-style: none;
+    font-size: 0.95rem;
+  }
+
+  .contents a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .contents a:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .contents .n {
+    font-family: var(--serif);
+    font-weight: 700;
+    margin-right: 4px;
+    color: var(--ink);
+  }
+
+  .flow-label {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    margin: 0 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .flow-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--ink);
+  }
+
+  .rule-section {
+    --accent: var(--shared);
+    --tint: var(--shared-tint);
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    border: 1.5px solid var(--ink);
+    background: #fbf8f1;
+    margin-bottom: 28px;
+    scroll-margin-top: 16px;
+  }
+
+  .rule-section.player {
+    --accent: var(--player);
+    --tint: var(--player-tint);
+  }
+
+  .rule-section.ai {
+    --accent: var(--ai);
+    --tint: var(--ai-tint);
+  }
+
+  .rule-section.reverse {
+    grid-template-columns: 1fr 300px;
+  }
+
+  .rule-section.reverse .art {
+    order: 2;
+    border-right: 0;
+    border-left: 1.5px solid var(--ink);
+  }
+
+  .art {
+    background: var(--tint);
+    border-right: 1.5px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+  }
+
+  .art img {
+    max-width: 100%;
+    max-height: 300px;
+    height: auto;
+    display: block;
+  }
+
+  .art .num {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 3.2rem;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.9;
+  }
+
+  .rule-section.reverse .art .num {
+    left: auto;
+    right: 14px;
+  }
+
+  .body {
+    padding: 26px 30px 28px;
+    border-top: 6px solid var(--accent);
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    padding: 1px 8px;
+    margin-right: 8px;
+    vertical-align: 2px;
+  }
+
+  .body h2 {
+    font-family: var(--serif);
+    font-size: 1.65rem;
+    line-height: 1.2;
+    margin: 10px 0 12px;
+  }
+
+  .body > p {
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+
+  ol.rules {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: r;
+    border-top: 1px solid var(--rule);
+  }
+
+  ol.rules > li {
+    counter-increment: r;
+    display: grid;
+    grid-template-columns: 2em 1fr;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  ol.rules > li::before {
+    content: counter(r);
+    font-family: var(--serif);
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  ol.rules ul {
+    margin: 6px 0 0;
+    padding-left: 1.1em;
+  }
+
+  ol.rules ul li {
+    margin: 2px 0;
+  }
+
+  ol.rules ul li::marker {
+    color: var(--accent);
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 3px double var(--ink);
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media (max-width: 760px) {
+    .page {
+      padding: 28px 16px 48px;
+    }
+
+    .masthead {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .masthead .hero-art {
+      order: -1;
+      max-width: 180px;
+      justify-self: center;
+    }
+
+    .rule-section, .rule-section.reverse {
+      grid-template-columns: 1fr;
+    }
+
+    .rule-section .art, .rule-section.reverse .art {
+      order: 0;
+      border: 0;
+      border-bottom: 1.5px solid var(--ink);
+      padding: 16px;
+    }
+
+    .art img {
+      max-height: 200px;
+    }
+
+    .body {
+      padding: 20px 18px 22px;
+    }
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      font-size: 11pt;
+    }
+
+    .contents, .art {
+      display: none;
+    }
+
+    .rule-section, .rule-section.reverse {
+      grid-template-columns: 1fr;
+      break-inside: avoid;
+    }
+
+    .masthead {
+      grid-template-columns: 1fr;
+    }
+
+    .masthead .hero-art {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="masthead">
+    <div>
+      <h1>Solo Trial Mode</h1>
+      <p class="lede">
+        A single player mode for Final Fantasy TCG, inspired by Magic: The Gathering's Horde Mode.
+        You play a normal deck against a 50 card AI deck that draws cards into play and attacks
+        with all available Forwards, every turn. You win by milling the AI's deck to 0 cards
+        before it deals 7 damage to you.</p>
+    </div>
+    <div class="hero-art"><img src="images/cloud.png" alt="Cloud Strife artwork"></div>
+  </header>
+
+  <ol class="contents" aria-label="Sections">
+    <li><a href="#s1"><span class="n">1</span>Setup</a></li>
+    <li><a href="#s2"><span class="n">2</span>Your Turn</a></li>
+    <li><a href="#s3"><span class="n">3</span>AI Draw Phase</a></li>
+    <li><a href="#s4"><span class="n">4</span>AI Backups</a></li>
+    <li><a href="#s5"><span class="n">5</span>AI Attack Phase</a></li>
+    <li><a href="#s6"><span class="n">6</span>Duplicate Names</a></li>
+    <li><a href="#s7"><span class="n">7</span>Winning &amp; Losing</a></li>
+  </ol>
+
+  <h2 class="flow-label">How to play</h2>
+
+  <section class="rule-section" id="s1">
+    <div class="art"><span class="num">1</span><img src="images/Quina_Quen.png" alt="Quina Quen artwork"></div>
+    <div class="body">
+      <span class="tag">Both</span>
+      <h2>Setup</h2>
+      <p>
+        Pick / construct a legal 50 card FFTCG deck for the player and one for the AI.
+      </p>
+      <ol class="rules">
+        <li>You take 2 full turns before the AI does anything.</li>
+        <li>Draw 2 on each of those turns, as per the normal FFTCG rules.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rule-section player reverse" id="s2">
+    <div class="art"><span class="num">2</span><img src="images/260px-Tidus_FFX_artwork.png" alt="Tidus artwork"></div>
+    <div class="body">
+      <span class="tag">Player</span>
+      <h2>Your Turn</h2>
+      <p>Your turn works exactly as it does in a normal game.</p>
+      <ol class="rules">
+        <li>Active Phase.</li>
+        <li>Draw 2.</li>
+        <li>Main Phase.</li>
+        <li><div>Attack Phase.
+          <ul>
+            <li>The AI never blocks.</li>
+            <li>For each point of damage you deal to the AI, mill 1 card from the top of its deck.</li>
+          </ul></div>
+        </li>
+        <li>End Phase.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rule-section ai" id="s3">
+    <div class="art"><span class="num">3</span><img src="images/ArdynIzunia.png" alt="Ardyn Izunia artwork"></div>
+    <div class="body">
+      <span class="tag">AI</span>
+      <h2>AI Draw Phase</h2>
+      <p>
+        The AI doesn't make spontaneous decisions and instead follows a set of rules.
+        It draws cards and plays whatever comes up.
+        The AI never pays the CP cost for playing cards, and its EX Bursts don't trigger.</p>
+      <ol class="rules">
+        <li>Draw cards from the top of the AI deck until you draw a Forward.</li>
+        <li>Every drawn card enters play immediately, if it legally can.</li>
+        <li>Summons resolve immediately.</li>
+        <li>Monsters enter play as written on the card.</li>
+        <li>If the Forward can't stay in play because of the duplicate name rule, it breaks and the draw phase still stops there.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rule-section ai reverse" id="s4">
+    <div class="art"><span class="num">4</span><img src="images/debvuxj92epyys9dr3jt.png" alt="Final Fantasy character artwork"></div>
+    <div class="body">
+      <span class="tag">AI</span>
+      <h2>AI Backups</h2>
+      <p>Backups work differently in this mode. Each AI Backup makes the AI's Forwards more powerful, and can be destroyed by winning blocks.</p>
+      <ol class="rules">
+        <li>Each AI Backup gives all AI Forwards +500 power, up to a maximum of +2,000.</li>
+        <li>The bonus power is applied / removed straight away whenever a Backup enters or leaves play.</li>
+        <li>When you destroy an AI Forward by blocking it, you also destroy the AI's oldest Backup.</li>
+        <li>If the printed power of the destroyed Forward was 8,000 or more, destroy the AI's two oldest Backups instead of one.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rule-section ai" id="s5">
+    <div class="art"><span class="num">5</span><img src="images/Seifer_tattered_outfit_from_FFVIII_Remaster_battle_render.png" alt="Seifer Almasy artwork"></div>
+    <div class="body">
+      <span class="tag">AI</span>
+      <h2>AI Attack Phase</h2>
+      <p>Every AI Forward attacks on every AI turn, starting from the leftmost Forward to the right.</p>
+      <ol class="rules">
+        <li>AI Forwards have haste, so they can attack the turn they come into play.</li>
+        <li>AI Forwards don't dull when they attack.</li>
+        <li>You can block as normal.</li>
+        <li>When an AI effect has to choose one of your Characters, it picks the one with the highest current power.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rule-section reverse" id="s6">
+    <div class="art"><span class="num">6</span><img src="images/Moogle-king.png" alt="Moogle King artwork"></div>
+    <div class="body">
+      <span class="tag">Both</span>
+      <h2>Duplicate Names</h2>
+      <p>The normal uniqueness rule applies to both sides.</p>
+      <ol class="rules">
+        <li>Neither you nor the AI can control two Characters with the same name.</li>
+        <li>If a duplicate enters play, choose one to keep and put the other into the Break Zone.</li>
+        <li>For the AI, always keep the one with the higher printed power.</li>
+        <li>Cards with the Standard Unit icon can have multiple copies in play, as per standard rules.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rule-section" id="s7">
+    <div class="art"><span class="num">7</span><img src="images/WoFF_Tonberry.png" alt="Tonberry artwork"></div>
+    <div class="body">
+      <span class="tag">Both</span>
+      <h2>Winning &amp; Losing</h2>
+      <p>A typical game lasts roughly 40 to 50 minutes and has different win conditions to a standard game.</p>
+      <ol class="rules">
+        <li>You win when the AI's deck reaches 0 cards.</li>
+        <li>You lose when you take 7 damage.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>Solo Trial Mode Ruleset v1.1</footer>
+
+</main>
+</body>
+</html>
